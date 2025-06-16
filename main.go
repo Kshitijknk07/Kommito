@@ -20,7 +20,8 @@ func main() {
    add     ➕  Stage files for commit
    commit  📝  Commit staged files
    log     📜  Show commit history
-   status  🧭  Show repo status
+   status  ��  Show repo status
+   clone   📋  Clone a repository
 
 ✨ Example:
    kommito init
@@ -28,7 +29,8 @@ func main() {
    kommito add .         # Stage all files
    kommito commit -m "message"
    kommito log
-   kommito status`)
+   kommito status
+   kommito clone <source> <destination>`)
 		return
 	}
 
@@ -83,6 +85,22 @@ func main() {
 		if err := repo.Status(); err != nil {
 			fmt.Printf("(╥﹏╥) Could not show status: %v\n", err)
 		}
+	case "clone":
+		if len(args) < 4 {
+			fmt.Println(`(⊙_☉) You need to specify source and destination!
+
+✨ Example:
+   kommito clone /path/to/source /path/to/destination`)
+			return
+		}
+		source := args[2]
+		destination := args[3]
+		fmt.Println("(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Cloning repository...")
+		if err := repo.CloneRepo(source, destination); err != nil {
+			fmt.Printf("(╥﹏╥) Clone failed: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("(づ｡◕‿‿◕｡)づ Repository cloned successfully!")
 	default:
 		fmt.Printf(`(¬_¬) I don't know that command: "%s"
 
@@ -93,6 +111,7 @@ Maybe try:
    kommito commit -m "message"
    kommito log
    kommito status
+   kommito clone <source> <destination>
 
 Kommito is still just a chibi tool... be nice to it! 🐣`, args[1])
 	}
