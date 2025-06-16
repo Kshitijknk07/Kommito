@@ -15,10 +15,8 @@ Kommito provides essential version control features:
 
 ```
 kommito/
-├── cmd/           # Command-line interface
 ├── internal/      # Internal packages
 │   └── repo/     # Core repository operations
-├── pkg/          # Public packages
 ├── main.go       # Entry point
 └── go.mod        # Go module definition
 ```
