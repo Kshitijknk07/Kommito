@@ -57,7 +57,7 @@ func AddFile(path string) error {
 			}
 
 			if entry.IsDir() {
-				// Skip directories
+
 				continue
 			}
 

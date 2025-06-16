@@ -9,7 +9,6 @@ import (
 )
 
 func CloneRepo(source, destination string) error {
-
 	if strings.HasPrefix(source, "http") || strings.HasPrefix(source, "git@") {
 		return cloneGitRepo(source, destination)
 	}
@@ -97,7 +96,6 @@ func cloneGitRepo(gitURL, destination string) error {
 	var addedFiles []string
 	for _, entry := range entries {
 		name := entry.Name()
-
 		if name == ".git" || isSystemFile(name) {
 			continue
 		}
@@ -106,11 +104,18 @@ func cloneGitRepo(gitURL, destination string) error {
 		dstPath := name
 
 		if entry.IsDir() {
+
+			if err := os.MkdirAll(dstPath, 0755); err != nil {
+				fmt.Printf("(╥﹏╥) Could not create directory %s: %v\n", name, err)
+				continue
+			}
+
 			if err := copyDir(srcPath, dstPath); err != nil {
 				fmt.Printf("(╥﹏╥) Could not copy directory %s: %v\n", name, err)
 				continue
 			}
 		} else {
+
 			if err := copyFile(srcPath, dstPath); err != nil {
 				fmt.Printf("(╥﹏╥) Could not copy file %s: %v\n", name, err)
 				continue
@@ -132,7 +137,6 @@ func cloneGitRepo(gitURL, destination string) error {
 }
 
 func copyDir(src, dst string) error {
-
 	if err := os.MkdirAll(dst, 0755); err != nil {
 		return err
 	}
@@ -144,7 +148,6 @@ func copyDir(src, dst string) error {
 
 	for _, entry := range entries {
 		name := entry.Name()
-
 		if isSystemFile(name) {
 			continue
 		}
@@ -167,7 +170,6 @@ func copyDir(src, dst string) error {
 }
 
 func copyFile(src, dst string) error {
-
 	data, err := os.ReadFile(src)
 	if err != nil {
 		return err
