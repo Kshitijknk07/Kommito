@@ -10,7 +10,6 @@ import (
 )
 
 func isSystemFile(name string) bool {
-
 	systemFiles := []string{
 		".git",
 		".kommito",
@@ -27,6 +26,10 @@ func isSystemFile(name string) bool {
 		"Templates",
 		"ntuser.dat.LOG1",
 		"ntuser.dat.LOG2",
+		"My Music",
+		"My Pictures",
+		"My Videos",
+		"Kommito",
 	}
 
 	for _, sysFile := range systemFiles {
@@ -39,7 +42,6 @@ func isSystemFile(name string) bool {
 }
 
 func AddFile(path string) error {
-
 	if path == "." {
 		entries, err := os.ReadDir(".")
 		if err != nil {
@@ -53,6 +55,12 @@ func AddFile(path string) error {
 			if isSystemFile(name) {
 				continue
 			}
+
+			if entry.IsDir() {
+				// Skip directories
+				continue
+			}
+
 			if err := addSingleFile(name); err != nil {
 				fmt.Printf("(╥﹏╥) Could not add %s: %v\n", name, err)
 				continue
@@ -73,7 +81,6 @@ func AddFile(path string) error {
 }
 
 func addSingleFile(filePath string) error {
-
 	if isSystemFile(filePath) {
 		return fmt.Errorf("skipping system file: %s", filePath)
 	}
