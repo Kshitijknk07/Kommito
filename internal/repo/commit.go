@@ -4,7 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,7 +21,7 @@ type Commit struct {
 func CommitStaged(message string) error {
 	// Read index
 	indexPath := filepath.Join(".kommito", "index")
-	indexData, err := ioutil.ReadFile(indexPath)
+	indexData, err := os.ReadFile(indexPath)
 	if err != nil {
 		return fmt.Errorf("failed to read index: %w", err)
 	}
@@ -40,7 +40,7 @@ func CommitStaged(message string) error {
 	// Get author from config.json if possible
 	author := "Kommito User"
 	configPath := filepath.Join(".kommito", "config.json")
-	if configData, err := ioutil.ReadFile(configPath); err == nil {
+	if configData, err := os.ReadFile(configPath); err == nil {
 		var cfg struct {
 			Name string `json:"name"`
 		}
@@ -68,13 +68,13 @@ func CommitStaged(message string) error {
 
 	// Store commit object
 	commitPath := filepath.Join(".kommito", "objects", "commits", commitHash)
-	if err := ioutil.WriteFile(commitPath, commitBytes, 0644); err != nil {
+	if err := os.WriteFile(commitPath, commitBytes, 0644); err != nil {
 		return fmt.Errorf("failed to write commit object: %w", err)
 	}
 
 	// Update HEAD
 	headPath := filepath.Join(".kommito", "HEAD")
-	if err := ioutil.WriteFile(headPath, []byte(commitHash), 0644); err != nil {
+	if err := os.WriteFile(headPath, []byte(commitHash), 0644); err != nil {
 		return fmt.Errorf("failed to update HEAD: %w", err)
 	}
 
