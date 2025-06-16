@@ -6,7 +6,39 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+// isSystemFile checks if a file or directory should be ignored
+func isSystemFile(name string) bool {
+	// List of system files and directories to ignore
+	systemFiles := []string{
+		".git",
+		".kommito",
+		"Application Data",
+		"Cookies",
+		"Local Settings",
+		"My Documents",
+		"NTUSER.DAT",
+		"NetHood",
+		"PrintHood",
+		"Recent",
+		"SendTo",
+		"Start Menu",
+		"Templates",
+		"ntuser.dat.LOG1",
+		"ntuser.dat.LOG2",
+	}
+
+	// Check if the file is in the system files list
+	for _, sysFile := range systemFiles {
+		if strings.EqualFold(name, sysFile) {
+			return true
+		}
+	}
+
+	return false
+}
 
 // AddFile stages a file or all files in a directory
 func AddFile(path string) error {
@@ -20,8 +52,8 @@ func AddFile(path string) error {
 		var addedFiles []string
 		for _, entry := range entries {
 			name := entry.Name()
-			// Skip directories and .kommito/.git
-			if entry.IsDir() || name == ".kommito" || name == ".git" {
+			// Skip system files and directories
+			if isSystemFile(name) {
 				continue
 			}
 			if err := addSingleFile(name); err != nil {
@@ -46,6 +78,11 @@ func AddFile(path string) error {
 
 // addSingleFile handles adding a single file
 func addSingleFile(filePath string) error {
+	// Skip system files
+	if isSystemFile(filePath) {
+		return fmt.Errorf("skipping system file: %s", filePath)
+	}
+
 	// Read file contents
 	f, err := os.Open(filePath)
 	if err != nil {
