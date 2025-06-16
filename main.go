@@ -17,11 +17,18 @@ func main() {
 
 🧭 Available Commands:
    init    ⚙️  Initialize a brand new Kommito repo
-   add     ➕  Stage a file for commit
+   add     ➕  Stage files for commit
+   commit  📝  Commit staged files
+   log     📜  Show commit history
+   status  🧭  Show repo status
 
 ✨ Example:
    kommito init
-   kommito add <file>`)
+   kommito add <file>    # Stage a single file
+   kommito add .         # Stage all files
+   kommito commit -m "message"
+   kommito log
+   kommito status`)
 		return
 	}
 
@@ -43,22 +50,49 @@ func main() {
 			fmt.Println(`(⊙_☉) You need to specify a file to add!
 
 ✨ Example:
-   kommito add myfile.txt`)
+   kommito add myfile.txt    # Stage a single file
+   kommito add .             # Stage all files`)
 			return
 		}
 		filePath := args[2]
-		fmt.Printf("(ง •_•)ง Staging file: %s ...\n", filePath)
+		fmt.Printf("(ง •_•)ง Staging files...\n")
 		if err := repo.AddFile(filePath); err != nil {
-			fmt.Printf("(╥﹏╥) Could not add file: %v\n", err)
+			fmt.Printf("(╥﹏╥) Could not add files: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Println("(＾▽＾) File staged successfully!")
+	case "commit":
+		if len(args) < 4 || args[2] != "-m" {
+			fmt.Println(`(⊙_☉) You need to provide a commit message!
+
+✨ Example:
+   kommito commit -m "Initial commit"`)
+			return
+		}
+		message := args[3]
+		fmt.Println("(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Creating your commit...")
+		if err := repo.CommitStaged(message); err != nil {
+			fmt.Printf("(╥﹏╥) Commit failed: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("(づ｡◕‿‿◕｡)づ Commit created successfully!")
+	case "log":
+		if err := repo.LogCommits(); err != nil {
+			fmt.Printf("(╥﹏╥) Could not show log: %v\n", err)
+		}
+	case "status":
+		if err := repo.Status(); err != nil {
+			fmt.Printf("(╥﹏╥) Could not show status: %v\n", err)
+		}
 	default:
 		fmt.Printf(`(¬_¬) I don't know that command: "%s"
 
 Maybe try:
    kommito init
-   kommito add <file>
+   kommito add <file>    # Stage a single file
+   kommito add .         # Stage all files
+   kommito commit -m "message"
+   kommito log
+   kommito status
 
 Kommito is still just a chibi tool... be nice to it! 🐣`, args[1])
 	}

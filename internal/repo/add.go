@@ -8,8 +8,44 @@ import (
 	"path/filepath"
 )
 
-// AddFile stages a file: reads, hashes, stores as blob, and updates index
-func AddFile(filePath string) error {
+// AddFile stages a file or all files in a directory
+func AddFile(path string) error {
+	// Handle adding all files
+	if path == "." {
+		entries, err := os.ReadDir(".")
+		if err != nil {
+			return fmt.Errorf("failed to read directory: %w", err)
+		}
+
+		var addedFiles []string
+		for _, entry := range entries {
+			name := entry.Name()
+			// Skip directories and .kommito/.git
+			if entry.IsDir() || name == ".kommito" || name == ".git" {
+				continue
+			}
+			if err := addSingleFile(name); err != nil {
+				fmt.Printf("(╥﹏╥) Could not add %s: %v\n", name, err)
+				continue
+			}
+			addedFiles = append(addedFiles, name)
+		}
+
+		if len(addedFiles) == 0 {
+			fmt.Println("(⊙_☉) No files to add!")
+			return nil
+		}
+
+		fmt.Printf("(＾▽＾) Successfully added %d files!\n", len(addedFiles))
+		return nil
+	}
+
+	// Handle single file
+	return addSingleFile(path)
+}
+
+// addSingleFile handles adding a single file
+func addSingleFile(filePath string) error {
 	// Read file contents
 	f, err := os.Open(filePath)
 	if err != nil {

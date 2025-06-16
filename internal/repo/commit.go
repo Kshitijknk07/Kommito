@@ -1,0 +1,82 @@
+package repo
+
+import (
+	"crypto/sha1"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+type Commit struct {
+	Author    string   `json:"author"`
+	Timestamp string   `json:"timestamp"`
+	Message   string   `json:"message"`
+	Blobs     []string `json:"blobs"`
+}
+
+// CommitStaged creates a commit from staged files and updates HEAD
+func CommitStaged(message string) error {
+	// Read index
+	indexPath := filepath.Join(".kommito", "index")
+	indexData, err := ioutil.ReadFile(indexPath)
+	if err != nil {
+		return fmt.Errorf("failed to read index: %w", err)
+	}
+	lines := strings.Split(strings.TrimSpace(string(indexData)), "\n")
+	var blobs []string
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, " ", 2)
+		if len(parts) > 0 {
+			blobs = append(blobs, parts[0])
+		}
+	}
+
+	// Get author from config.json if possible
+	author := "Kommito User"
+	configPath := filepath.Join(".kommito", "config.json")
+	if configData, err := ioutil.ReadFile(configPath); err == nil {
+		var cfg struct {
+			Name string `json:"name"`
+		}
+		if err := json.Unmarshal(configData, &cfg); err == nil && cfg.Name != "" {
+			author = cfg.Name
+		}
+	}
+
+	commit := Commit{
+		Author:    author,
+		Timestamp: time.Now().Format(time.RFC3339),
+		Message:   message,
+		Blobs:     blobs,
+	}
+
+	commitBytes, err := json.MarshalIndent(commit, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal commit: %w", err)
+	}
+
+	// Hash the commit object
+	h := sha1.New()
+	h.Write(commitBytes)
+	commitHash := fmt.Sprintf("%x", h.Sum(nil))
+
+	// Store commit object
+	commitPath := filepath.Join(".kommito", "objects", "commits", commitHash)
+	if err := ioutil.WriteFile(commitPath, commitBytes, 0644); err != nil {
+		return fmt.Errorf("failed to write commit object: %w", err)
+	}
+
+	// Update HEAD
+	headPath := filepath.Join(".kommito", "HEAD")
+	if err := ioutil.WriteFile(headPath, []byte(commitHash), 0644); err != nil {
+		return fmt.Errorf("failed to update HEAD: %w", err)
+	}
+
+	return nil
+}
