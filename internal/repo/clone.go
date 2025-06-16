@@ -83,7 +83,7 @@ func cloneGitRepo(gitURL, destination string) error {
 		return fmt.Errorf("failed to clone Git repository: %w", err)
 	}
 
-	// Initialize Kommito repository in destination
+	// Create destination directory if it doesn't exist
 	if err := os.MkdirAll(destination, 0755); err != nil {
 		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
@@ -99,15 +99,29 @@ func cloneGitRepo(gitURL, destination string) error {
 		return fmt.Errorf("failed to read Git repository: %w", err)
 	}
 
+	var addedFiles []string
 	for _, entry := range entries {
-		if entry.Name() == ".git" {
+		name := entry.Name()
+		// Skip .git directory and system files
+		if name == ".git" || isSystemFile(name) {
 			continue
 		}
-		srcPath := filepath.Join(tempDir, entry.Name())
-		dstPath := filepath.Join(destination, entry.Name())
-		if err := copyDir(srcPath, dstPath); err != nil {
-			return fmt.Errorf("failed to copy %s: %w", entry.Name(), err)
+
+		srcPath := filepath.Join(tempDir, name)
+		dstPath := filepath.Join(destination, name)
+
+		if entry.IsDir() {
+			if err := copyDir(srcPath, dstPath); err != nil {
+				fmt.Printf("(╥﹏╥) Could not copy directory %s: %v\n", name, err)
+				continue
+			}
+		} else {
+			if err := copyFile(srcPath, dstPath); err != nil {
+				fmt.Printf("(╥﹏╥) Could not copy file %s: %v\n", name, err)
+				continue
+			}
 		}
+		addedFiles = append(addedFiles, name)
 	}
 
 	// Add all files to Kommito
@@ -120,6 +134,7 @@ func cloneGitRepo(gitURL, destination string) error {
 		return fmt.Errorf("failed to create initial commit: %w", err)
 	}
 
+	fmt.Printf("(＾▽＾) Successfully added %d files!\n", len(addedFiles))
 	return nil
 }
 
@@ -138,8 +153,14 @@ func copyDir(src, dst string) error {
 
 	// Copy each entry
 	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		dstPath := filepath.Join(dst, entry.Name())
+		name := entry.Name()
+		// Skip system files
+		if isSystemFile(name) {
+			continue
+		}
+
+		srcPath := filepath.Join(src, name)
+		dstPath := filepath.Join(dst, name)
 
 		if entry.IsDir() {
 			if err := copyDir(srcPath, dstPath); err != nil {

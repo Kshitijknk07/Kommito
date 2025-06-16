@@ -9,11 +9,11 @@ import (
 )
 
 func Status() error {
-	// Read index
+
 	indexPath := filepath.Join(".kommito", "index")
 	indexData, _ := os.ReadFile(indexPath)
 	indexLines := strings.Split(strings.TrimSpace(string(indexData)), "\n")
-	staged := make(map[string]string) // file -> hash
+	staged := make(map[string]string)
 	for _, line := range indexLines {
 		if line == "" {
 			continue
@@ -33,7 +33,6 @@ func Status() error {
 		}
 	}
 
-	// Find modified but unstaged files
 	fmt.Println("\n✏️ Modified but unstaged files:")
 	modified := false
 	for file, hash := range staged {
@@ -53,7 +52,6 @@ func Status() error {
 		fmt.Println("  (none)")
 	}
 
-	// Find untracked files
 	fmt.Println("\n❓ Untracked files:")
 	entries, _ := os.ReadDir(".")
 	untracked := false

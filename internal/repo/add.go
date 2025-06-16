@@ -9,9 +9,8 @@ import (
 	"strings"
 )
 
-// isSystemFile checks if a file or directory should be ignored
 func isSystemFile(name string) bool {
-	// List of system files and directories to ignore
+
 	systemFiles := []string{
 		".git",
 		".kommito",
@@ -30,7 +29,6 @@ func isSystemFile(name string) bool {
 		"ntuser.dat.LOG2",
 	}
 
-	// Check if the file is in the system files list
 	for _, sysFile := range systemFiles {
 		if strings.EqualFold(name, sysFile) {
 			return true
@@ -40,9 +38,8 @@ func isSystemFile(name string) bool {
 	return false
 }
 
-// AddFile stages a file or all files in a directory
 func AddFile(path string) error {
-	// Handle adding all files
+
 	if path == "." {
 		entries, err := os.ReadDir(".")
 		if err != nil {
@@ -52,7 +49,7 @@ func AddFile(path string) error {
 		var addedFiles []string
 		for _, entry := range entries {
 			name := entry.Name()
-			// Skip system files and directories
+
 			if isSystemFile(name) {
 				continue
 			}
@@ -72,18 +69,15 @@ func AddFile(path string) error {
 		return nil
 	}
 
-	// Handle single file
 	return addSingleFile(path)
 }
 
-// addSingleFile handles adding a single file
 func addSingleFile(filePath string) error {
-	// Skip system files
+
 	if isSystemFile(filePath) {
 		return fmt.Errorf("skipping system file: %s", filePath)
 	}
 
-	// Read file contents
 	f, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
@@ -95,10 +89,8 @@ func addSingleFile(filePath string) error {
 		return fmt.Errorf("failed to hash file: %w", err)
 	}
 
-	// Get hash as hex string
 	hash := fmt.Sprintf("%x", h.Sum(nil))
 
-	// Reset file pointer and read contents again
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
 		return fmt.Errorf("failed to rewind file: %w", err)
 	}
@@ -107,13 +99,11 @@ func addSingleFile(filePath string) error {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
 
-	// Store blob
 	blobPath := filepath.Join(".kommito", "objects", "blobs", hash)
 	if err := os.WriteFile(blobPath, content, 0644); err != nil {
 		return fmt.Errorf("failed to write blob: %w", err)
 	}
 
-	// Update index (append line: <hash> <filepath>)
 	indexLine := fmt.Sprintf("%s %s\n", hash, filePath)
 	indexPath := filepath.Join(".kommito", "index")
 	fidx, err := os.OpenFile(indexPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)

@@ -17,9 +17,8 @@ type Commit struct {
 	Blobs     []string `json:"blobs"`
 }
 
-// CommitStaged creates a commit from staged files and updates HEAD
 func CommitStaged(message string) error {
-	// Read index
+
 	indexPath := filepath.Join(".kommito", "index")
 	indexData, err := os.ReadFile(indexPath)
 	if err != nil {
@@ -37,7 +36,6 @@ func CommitStaged(message string) error {
 		}
 	}
 
-	// Get author from config.json if possible
 	author := "Kommito User"
 	configPath := filepath.Join(".kommito", "config.json")
 	if configData, err := os.ReadFile(configPath); err == nil {
@@ -61,18 +59,15 @@ func CommitStaged(message string) error {
 		return fmt.Errorf("failed to marshal commit: %w", err)
 	}
 
-	// Hash the commit object
 	h := sha1.New()
 	h.Write(commitBytes)
 	commitHash := fmt.Sprintf("%x", h.Sum(nil))
 
-	// Store commit object
 	commitPath := filepath.Join(".kommito", "objects", "commits", commitHash)
 	if err := os.WriteFile(commitPath, commitBytes, 0644); err != nil {
 		return fmt.Errorf("failed to write commit object: %w", err)
 	}
 
-	// Update HEAD
 	headPath := filepath.Join(".kommito", "HEAD")
 	if err := os.WriteFile(headPath, []byte(commitHash), 0644); err != nil {
 		return fmt.Errorf("failed to update HEAD: %w", err)
