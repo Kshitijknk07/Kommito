@@ -5,12 +5,13 @@ import (
 	"os"
 
 	repo "github.com/Kshitijknk07/Kommito/internal/repo"
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	args := os.Args
-	if len(args) < 2 {
-		fmt.Println(`(｡•́︿•̀｡) Nani?! You forgot the command!
+var rootCmd = &cobra.Command{
+	Use:   "kommito",
+	Short: "Kommito - A lightweight version control system",
+	Long: `(｡•́︿•̀｡) Kommito is a lightweight version control system inspired by Git.
 
 🔮 Usage:
    kommito <command>
@@ -20,22 +21,14 @@ func main() {
    add     ➕  Stage files for commit
    commit  📝  Commit staged files
    log     📜  Show commit history
-   status  ��  Show repo status
-   clone   📋  Clone a repository
+   status  🧭  Show repo status
+   clone   📋  Clone a repository`,
+}
 
-✨ Example:
-   kommito init
-   kommito add <file>    # Stage a single file
-   kommito add .         # Stage all files
-   kommito commit -m "message"
-   kommito log
-   kommito status
-   kommito clone <source> <destination>`)
-		return
-	}
-
-	switch args[1] {
-	case "init":
+var initCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize a new Kommito repository",
+	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(`(｀• ω •´)ゞ Roger that!
 
 ⚒️  Spinning up your Kommito engine...
@@ -47,72 +40,93 @@ func main() {
 		}
 
 		fmt.Println("✨ Repository initialized successfully!")
-	case "add":
-		if len(args) < 3 {
-			fmt.Println(`(⊙_☉) You need to specify a file to add!
+	},
+}
 
-✨ Example:
-   kommito add myfile.txt    # Stage a single file
-   kommito add .             # Stage all files`)
-			return
-		}
-		filePath := args[2]
+var addCmd = &cobra.Command{
+	Use:   "add [file]",
+	Short: "Stage files for commit",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		filePath := args[0]
 		fmt.Printf("(ง •_•)ง Staging files...\n")
 		if err := repo.AddFile(filePath); err != nil {
 			fmt.Printf("(╥﹏╥) Could not add files: %v\n", err)
 			os.Exit(1)
 		}
-	case "commit":
-		if len(args) < 4 || args[2] != "-m" {
+	},
+}
+
+var commitCmd = &cobra.Command{
+	Use:   "commit -m [message]",
+	Short: "Commit staged files",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		if args[0] != "-m" {
 			fmt.Println(`(⊙_☉) You need to provide a commit message!
 
 ✨ Example:
    kommito commit -m "Initial commit"`)
 			return
 		}
-		message := args[3]
+		message := args[1]
 		fmt.Println("(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Creating your commit...")
 		if err := repo.CommitStaged(message); err != nil {
 			fmt.Printf("(╥﹏╥) Commit failed: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Println("(づ｡◕‿‿◕｡)づ Commit created successfully!")
-	case "log":
+	},
+}
+
+var logCmd = &cobra.Command{
+	Use:   "log",
+	Short: "Show commit history",
+	Run: func(cmd *cobra.Command, args []string) {
 		if err := repo.LogCommits(); err != nil {
 			fmt.Printf("(╥﹏╥) Could not show log: %v\n", err)
 		}
-	case "status":
+	},
+}
+
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Show repository status",
+	Run: func(cmd *cobra.Command, args []string) {
 		if err := repo.Status(); err != nil {
 			fmt.Printf("(╥﹏╥) Could not show status: %v\n", err)
 		}
-	case "clone":
-		if len(args) < 4 {
-			fmt.Println(`(⊙_☉) You need to specify source and destination!
+	},
+}
 
-✨ Example:
-   kommito clone /path/to/source /path/to/destination`)
-			return
-		}
-		source := args[2]
-		destination := args[3]
+var cloneCmd = &cobra.Command{
+	Use:   "clone [source] [destination]",
+	Short: "Clone a repository",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		source := args[0]
+		destination := args[1]
 		fmt.Println("(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Cloning repository...")
 		if err := repo.CloneRepo(source, destination); err != nil {
 			fmt.Printf("(╥﹏╥) Clone failed: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Println("(づ｡◕‿‿◕｡)づ Repository cloned successfully!")
-	default:
-		fmt.Printf(`(¬_¬) I don't know that command: "%s"
+	},
+}
 
-Maybe try:
-   kommito init
-   kommito add <file>    # Stage a single file
-   kommito add .         # Stage all files
-   kommito commit -m "message"
-   kommito log
-   kommito status
-   kommito clone <source> <destination>
+func init() {
+	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(commitCmd)
+	rootCmd.AddCommand(logCmd)
+	rootCmd.AddCommand(statusCmd)
+	rootCmd.AddCommand(cloneCmd)
+}
 
-Kommito is still just a chibi tool... be nice to it! 🐣`, args[1])
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
