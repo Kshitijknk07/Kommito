@@ -1,0 +1,31 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output of go build
+/Kommito
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Dependency directories (if any)
+vendor/
+
+# Go modules cache
+/go.sum
+
+# Kommito repo internals
+.kommito/

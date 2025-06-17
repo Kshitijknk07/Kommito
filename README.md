@@ -9,6 +9,7 @@ Kommito is a lightweight version control system inspired by Git, built as a fun 
 ## Why Kommito?
 
 I built Kommito to:
+
 - Learn and understand the fundamental concepts of version control systems
 - Implement Git-like functionality in a simplified manner
 - Have fun experimenting with file system operations and data structures
@@ -19,6 +20,7 @@ I built Kommito to:
 Kommito provides essential version control features:
 
 1. **Repository Management**
+
    - Initialize new repositories
    - Track file changes
    - Maintain commit history
@@ -26,31 +28,35 @@ Kommito provides essential version control features:
    - Clone existing repositories (both Kommito and Git)
 
 2. **File Operations**
-   - Stage individual or multiple files
+
+   - Stage individual files
    - Track file modifications
    - Store file contents efficiently
-   - Handle file conflicts
    - Skip system files automatically
+   - Handle file content hashing
 
 3. **Commit System**
+
    - Create commits with messages
    - Track commit history
    - Maintain commit metadata
-   - Link commits in a chain
    - Automatic author detection
+   - Timestamp tracking
 
 4. **Status and History**
+
    - View repository status
    - Check staged changes
    - Display commit history
    - Show file modifications
    - Track untracked files
 
-5. **Repository Cloning**
-   - Clone local Kommito repositories
-   - Clone Git repositories
-   - Automatic conversion from Git to Kommito format
-   - Preserve file history and structure
+5. **Branch Management**
+   - Create new branches
+   - Switch between branches
+   - List all branches
+   - Delete branches
+   - Track current branch
 
 ## Project Structure
 
@@ -63,7 +69,8 @@ kommito/
 │       ├── index.go    # Staging area management
 │       ├── clone.go    # Repository cloning
 │       ├── log.go      # Commit history
-│       └── status.go   # Repository status
+│       ├── status.go   # Repository status
+│       └── branch.go   # Branch management
 ├── main.go            # CLI entry point
 └── go.mod             # Go module definition
 ```
@@ -80,7 +87,7 @@ When you initialize a Kommito repository, it creates the following structure:
 ├── refs/             # References
 │   └── heads/        # Branch references
 ├── HEAD              # Points to current commit
-├── index            # Staging area (JSON format)
+├── index            # Staging area
 └── config.json      # Repository configuration
 ```
 
@@ -89,14 +96,14 @@ When you initialize a Kommito repository, it creates the following structure:
 ### Object Storage System
 
 1. **Blob Objects**
+
    - Store actual file contents
    - Named using SHA-1 hash of content
-   - Compressed for efficiency
    - Located in `.kommito/objects/blobs/`
 
 2. **Commit Objects**
-   - Store commit metadata
-   - Reference parent commits
+   - Store commit metadata in JSON format
+   - Include author, timestamp, and message
    - List of blob references
    - Located in `.kommito/objects/commits/`
 
@@ -111,9 +118,10 @@ type Commit struct {
     Blobs     []string `json:"blobs"`      // Referenced blob hashes
 }
 
-// Index structure
-type Index struct {
-    Files map[string]string `json:"files"` // File path to blob hash mapping
+// Branch structure
+type Branch struct {
+    Name   string `json:"name"`   // Branch name
+    Commit string `json:"commit"` // Latest commit hash
 }
 ```
 
@@ -141,11 +149,18 @@ kommito status
 # Clone a repository
 kommito clone <source> <destination>  # Clone local Kommito repo
 kommito clone <git-url> <destination> # Clone Git repo
+
+# Branch management
+kommito branch list              # List all branches
+kommito branch create <name>     # Create a new branch
+kommito branch switch <name>     # Switch to a branch
+kommito branch delete <name>     # Delete a branch
 ```
 
 ### Workflow Examples
 
 1. **Start a New Project**
+
    ```bash
    mkdir my-project
    cd my-project
@@ -153,26 +168,31 @@ kommito clone <git-url> <destination> # Clone Git repo
    ```
 
 2. **Add and Track Files**
+
    ```bash
    echo "# My Project" > README.md
    kommito add README.md
    kommito commit -m "Initial commit"
    ```
 
-3. **Clone an Existing Repository**
+3. **Work with Branches**
+
+   ```bash
+   kommito branch create feature
+   kommito branch switch feature
+   # Make changes
+   kommito add .
+   kommito commit -m "Add new feature"
+   ```
+
+4. **Clone an Existing Repository**
+
    ```bash
    # Clone a local Kommito repository
    kommito clone /path/to/repo my-clone
 
    # Clone a Git repository
    kommito clone https://github.com/user/repo.git my-clone
-   ```
-
-4. **Make Changes and Commit**
-   ```bash
-   # Edit files
-   kommito add .
-   kommito commit -m "Update project files"
    ```
 
 ## Technical Implementation
@@ -189,16 +209,19 @@ kommito clone <git-url> <destination> # Clone Git repo
 ### Key Features
 
 1. **Atomic Operations**
+
    - Safe file writes
    - Transaction-like commits
    - Error recovery
 
 2. **Efficient Storage**
+
    - Content-based addressing
    - Deduplication of content
-   - Compressed storage
+   - JSON-based metadata storage
 
 3. **User Experience**
+
    - Simple command interface
    - Clear error messages
    - Intuitive workflow
@@ -212,6 +235,7 @@ kommito clone <git-url> <destination> # Clone Git repo
 ## Building and Installation
 
 ### Prerequisites
+
 - Go 1.16 or higher
 - Git (for version control and cloning)
 
@@ -232,7 +256,6 @@ go run main.go
 1. **Current Limitations**
    - Basic version control features only
    - No remote repository support
-   - Limited branch management
    - No merge conflict resolution
    - Built for learning purposes only
 
