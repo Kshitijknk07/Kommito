@@ -22,7 +22,8 @@ var rootCmd = &cobra.Command{
    commit  📝  Commit staged files
    log     📜  Show commit history
    status  🧭  Show repo status
-   clone   📋  Clone a repository`,
+   clone   📋  Clone a repository
+   branch  🌿  Manage branches`,
 }
 
 var initCmd = &cobra.Command{
@@ -58,24 +59,22 @@ var addCmd = &cobra.Command{
 }
 
 var commitCmd = &cobra.Command{
-	Use:   "commit -m [message]",
+	Use:   "commit",
 	Short: "Commit staged files",
-	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		if args[0] != "-m" {
-			fmt.Println(`(⊙_☉) You need to provide a commit message!
+	RunE: func(cmd *cobra.Command, args []string) error {
+		message, _ := cmd.Flags().GetString("message")
+		if message == "" {
+			return fmt.Errorf(`(⊙_☉) You need to provide a commit message!
 
 ✨ Example:
-   kommito commit -m "Initial commit"`)
-			return
+   kommito commit --message "Initial commit"`)
 		}
-		message := args[1]
 		fmt.Println("(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Creating your commit...")
 		if err := repo.CommitStaged(message); err != nil {
-			fmt.Printf("(╥﹏╥) Commit failed: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("(╥﹏╥) Commit failed: %v", err)
 		}
 		fmt.Println("(づ｡◕‿‿◕｡)づ Commit created successfully!")
+		return nil
 	},
 }
 
@@ -115,6 +114,86 @@ var cloneCmd = &cobra.Command{
 	},
 }
 
+var branchCmd = &cobra.Command{
+	Use:   "branch",
+	Short: "Manage branches",
+	Long: `Manage branches in your repository.
+
+Available subcommands:
+  list     List all branches
+  create   Create a new branch
+  switch   Switch to a branch
+  delete   Delete a branch`,
+}
+
+var branchListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all branches",
+	Run: func(cmd *cobra.Command, args []string) {
+		bm := repo.NewBranchManager(".")
+		branches, err := bm.ListBranches()
+		if err != nil {
+			fmt.Printf("(╥﹏╥) Could not list branches: %v\n", err)
+			os.Exit(1)
+		}
+
+		currentBranch, _ := bm.GetCurrentBranch()
+		fmt.Println("🌿 Branches:")
+		for _, branch := range branches {
+			marker := "  "
+			if branch.Name == currentBranch {
+				marker = "→ "
+			}
+			fmt.Printf("%s%s\n", marker, branch.Name)
+		}
+	},
+}
+
+var branchCreateCmd = &cobra.Command{
+	Use:   "create [name]",
+	Short: "Create a new branch",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		bm := repo.NewBranchManager(".")
+		if err := bm.CreateBranch(name); err != nil {
+			fmt.Printf("(╥﹏╥) Could not create branch: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✨ Branch '%s' created successfully!\n", name)
+	},
+}
+
+var branchSwitchCmd = &cobra.Command{
+	Use:   "switch [name]",
+	Short: "Switch to a branch",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		bm := repo.NewBranchManager(".")
+		if err := bm.SwitchBranch(name); err != nil {
+			fmt.Printf("(╥﹏╥) Could not switch branch: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✨ Switched to branch '%s'\n", name)
+	},
+}
+
+var branchDeleteCmd = &cobra.Command{
+	Use:   "delete [name]",
+	Short: "Delete a branch",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		bm := repo.NewBranchManager(".")
+		if err := bm.DeleteBranch(name); err != nil {
+			fmt.Printf("(╥﹏╥) Could not delete branch: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("✨ Branch '%s' deleted successfully!\n", name)
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(addCmd)
@@ -122,6 +201,15 @@ func init() {
 	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(statusCmd)
 	rootCmd.AddCommand(cloneCmd)
+
+	rootCmd.AddCommand(branchCmd)
+	branchCmd.AddCommand(branchListCmd)
+	branchCmd.AddCommand(branchCreateCmd)
+	branchCmd.AddCommand(branchSwitchCmd)
+	branchCmd.AddCommand(branchDeleteCmd)
+
+	commitCmd.Flags().StringP("message", "m", "", "Commit message")
+	commitCmd.MarkFlagRequired("message")
 }
 
 func main() {
