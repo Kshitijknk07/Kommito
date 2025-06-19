@@ -194,6 +194,19 @@ var branchDeleteCmd = &cobra.Command{
 	},
 }
 
+var mergeCmd = &cobra.Command{
+	Use:   "merge [branch]",
+	Short: "Merge a branch into the current branch",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		branch := args[0]
+		if err := repo.MergeBranches(branch); err != nil {
+			fmt.Printf("Merge failed: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(addCmd)
@@ -207,6 +220,7 @@ func init() {
 	branchCmd.AddCommand(branchCreateCmd)
 	branchCmd.AddCommand(branchSwitchCmd)
 	branchCmd.AddCommand(branchDeleteCmd)
+	rootCmd.AddCommand(mergeCmd)
 
 	commitCmd.Flags().StringP("message", "m", "", "Commit message")
 	commitCmd.MarkFlagRequired("message")

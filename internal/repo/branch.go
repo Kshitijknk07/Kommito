@@ -155,3 +155,12 @@ func (bm *BranchManager) GetCurrentBranch() (string, error) {
 
 	return "", fmt.Errorf("not on any branch")
 }
+
+func (bm *BranchManager) GetBranchCommit(name string) (string, error) {
+	branchPath := filepath.Join(bm.repoPath, ".kommito", "refs", "heads", name)
+	commit, err := os.ReadFile(branchPath)
+	if err != nil {
+		return "", err
+	}
+	return string(commit), nil
+}
