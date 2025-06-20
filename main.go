@@ -207,6 +207,19 @@ var mergeCmd = &cobra.Command{
 	},
 }
 
+var checkoutCmd = &cobra.Command{
+	Use:   "checkout [commit-or-branch]",
+	Short: "Restore working directory to a commit or branch",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		target := args[0]
+		if err := repo.CheckoutTarget(target); err != nil {
+			fmt.Printf("Checkout failed: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(addCmd)
@@ -221,6 +234,7 @@ func init() {
 	branchCmd.AddCommand(branchSwitchCmd)
 	branchCmd.AddCommand(branchDeleteCmd)
 	rootCmd.AddCommand(mergeCmd)
+	rootCmd.AddCommand(checkoutCmd)
 
 	commitCmd.Flags().StringP("message", "m", "", "Commit message")
 	commitCmd.MarkFlagRequired("message")
