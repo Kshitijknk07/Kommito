@@ -155,6 +155,12 @@ kommito branch list              # List all branches
 kommito branch create <name>     # Create a new branch
 kommito branch switch <name>     # Switch to a branch
 kommito branch delete <name>     # Delete a branch
+
+# Merge branches
+kommito merge <branch>           # Merge a branch into the current branch
+
+# Checkout/Restore
+kommito checkout <commit-or-branch> # Restore working directory to a commit or branch
 ```
 
 ### Workflow Examples
@@ -194,6 +200,27 @@ kommito branch delete <name>     # Delete a branch
    # Clone a Git repository
    kommito clone https://github.com/user/repo.git my-clone
    ```
+
+## User Experience & CLI
+
+- **Clear CLI commands:** All commands are available with `kommito --help` and subcommand help (e.g., `kommito commit --help`).
+- **Good error messages:** The CLI provides clear, user-friendly error messages and feedback for all operations.
+- **Intuitive workflow:** Commands and options are designed to be familiar to users of Git and other VCS tools.
+- **Emoji-based status indicators:** Fun, friendly feedback in the terminal.
+
+## Data Integrity
+
+- **Content-addressed storage:** All file contents (blobs) and commit objects are stored using their SHA-1 hash, ensuring that data is uniquely and reliably identified.
+- **Commit and branch safety:** HEAD and branch references (refs) are always updated correctly during commit, branch, merge, and checkout operations, so the repository state is always consistent.
+- **No data loss:** All operations are designed to avoid data loss during normal use. Files are only removed or overwritten as part of explicit user actions (e.g., checkout, merge with conflict resolution).
+- **Atomic operations:** Writes to the repository are performed atomically to prevent corruption or partial updates.
+
+## Edge Case Handling
+
+- **Cannot delete current branch:** The system prevents deletion of the branch you are currently on, protecting your work.
+- **Cannot merge branch into itself:** Merging a branch into itself is not allowed, avoiding unnecessary or confusing operations.
+- **Handles missing files gracefully:** Commands check for missing files and provide clear error messages without crashing.
+- **Warns on uncommitted changes:** (If implemented) The system can warn you if you have uncommitted changes before switching branches or checking out a commit, helping prevent accidental data loss.
 
 ## Technical Implementation
 
@@ -256,7 +283,7 @@ go run main.go
 1. **Current Limitations**
    - Basic version control features only
    - No remote repository support
-   - No merge conflict resolution
+   - Edge case protections are in place for branch deletion, merging, and file handling
    - Built for learning purposes only
 
 ## License
