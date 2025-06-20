@@ -285,11 +285,7 @@ go run main.go
    - No remote repository support
    - Edge case protections are in place for branch deletion, merging, and file handling
    - Built for learning purposes only
-
-## License
-
-This project is open source and available under the MIT License. See the [LICENSE](LICENSE) file for details.
-
+   - 
 ## Acknowledgments
 
 - Inspired by Git's design and implementation
